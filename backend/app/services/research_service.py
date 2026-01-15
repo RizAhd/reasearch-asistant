@@ -1,0 +1,103 @@
+import asyncio
+import time
+from typing import List, Dict
+from datetime import datetime
+from ..schemas.response import ResearchResponse, Source
+from .wikipedia_service import wikipedia_service
+from .arxiv_service import arxiv_service
+from .news_service import news_service
+from .ai_service import ai_service
+
+class ResearchService:
+    def __init__(self):
+        self.services = {
+            "wikipedia": wikipedia_service,
+            "arxiv": arxiv_service,
+            "news": news_service
+        }
+    
+    async def research(self, query: str, include_sources: List[str] = None, max_sources: int = 5) -> ResearchResponse:
+        """Main research orchestration function"""
+        start_time = time.time()
+        
+        if include_sources is None:
+            include_sources = ["wikipedia", "arxiv", "news"]
+        
+        print(f"🔍 Researching: {query}")
+        print(f"📚 Including sources: {include_sources}")
+        
+        # Step 1: Fetch from all requested sources in parallel
+        tasks = []
+        
+        if "wikipedia" in include_sources:
+            # Wikipedia is synchronous
+            wiki_task = asyncio.to_thread(wikipedia_service.search, query)
+            tasks.append(wiki_task)
+        
+        if "arxiv" in include_sources:
+            arxiv_task = arxiv_service.search(query, max_results=2)
+            tasks.append(arxiv_task)
+        
+        if "news" in include_sources:
+            # News is synchronous
+            news_task = asyncio.to_thread(news_service.search, query, max_results=2)
+            tasks.append(news_task)
+        
+        # Execute all tasks
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        
+        # Step 2: Combine all sources
+        all_sources = []
+        
+        for i, result in enumerate(results):
+            if isinstance(result, Exception):
+                print(f"Error fetching from source {i}: {result}")
+                continue
+            
+            if result:
+                if isinstance(result, list):
+                    all_sources.extend(result[:max_sources])
+                elif isinstance(result, dict):
+                    all_sources.append(result)
+        
+        # Remove duplicates by URL
+        seen_urls = set()
+        unique_sources = []
+        for source in all_sources:
+            if source.get('url') not in seen_urls:
+                seen_urls.add(source.get('url'))
+                unique_sources.append(source)
+        
+        # Limit total sources
+        final_sources = unique_sources[:max_sources]
+        
+        print(f"✅ Found {len(final_sources)} unique sources")
+        
+        # Step 3: Generate answer using OpenAI
+        ai_result = ai_service.generate_answer(query, final_sources)
+        
+        # Step 4: Format response
+        processing_time = time.time() - start_time
+        
+        # Convert to Source objects
+        source_objects = []
+        for src in final_sources:
+            source_objects.append(Source(
+                title=src.get('title', 'Unknown'),
+                content=src.get('content', ''),
+                url=src.get('url', '#'),
+                source_type=src.get('source_type', 'unknown'),
+                metadata=src.get('metadata', {})
+            ))
+        
+        return ResearchResponse(
+            answer=ai_result['answer'],
+            sources=source_objects,
+            query=query,
+            tokens_used=ai_result['tokens_used'],
+            processing_time=round(processing_time, 2),
+            timestamp=datetime.now()
+        )
+
+# Singleton instance
+research_service = ResearchService()

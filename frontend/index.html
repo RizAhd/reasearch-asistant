@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 Universal Research Assistant</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Roboto+Mono:wght@300;400&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <i class="fas fa-search"></i>
+                <h1>Universal Research Assistant</h1>
+            </div>
+            <p class="tagline">Combine Wikipedia, arXiv & NewsAPI with AI synthesis</p>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Input Section -->
+            <section class="input-section">
+                <div class="input-container">
+                    <div class="input-header">
+                        <i class="fas fa-question-circle"></i>
+                        <h2>What would you like to research?</h2>
+                    </div>
+                    
+                    <textarea 
+                        id="queryInput" 
+                        placeholder="Enter your research question here... 
+Example: 'What is quantum computing?' 
+'Or 'Latest developments in renewable energy'"
+                        rows="3"></textarea>
+                    
+                    <div class="controls">
+                        <div class="control-group">
+                            <label for="depthSelect">
+                                <i class="fas fa-layer-group"></i> Research Depth:
+                            </label>
+                            <select id="depthSelect">
+                                <option value="quick">Quick (Wikipedia only)</option>
+                                <option value="balanced" selected>Balanced (Recommended)</option>
+                                <option value="deep">Deep (All sources, detailed)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label>
+                                <i class="fas fa-database"></i> Sources:
+                            </label>
+                            <div class="source-checkboxes">
+                                <label><input type="checkbox" name="source" value="wikipedia" checked> Wikipedia</label>
+                                <label><input type="checkbox" name="source" value="arxiv" checked> arXiv</label>
+                                <label><input type="checkbox" name="source" value="news" checked> News</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="button-container">
+                        <button id="researchBtn" class="btn-primary">
+                            <i class="fas fa-search"></i> Start Research
+                        </button>
+                        <button id="clearBtn" class="btn-secondary">
+                            <i class="fas fa-eraser"></i> Clear
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Results Section -->
+            <section class="results-section" id="resultsSection" style="display: none;">
+                <div class="results-header">
+                    <i class="fas fa-chart-line"></i>
+                    <h2>Research Results</h2>
+                    <div class="stats" id="stats"></div>
+                </div>
+                
+                <div class="results-container">
+                    <!-- Answer -->
+                    <div class="answer-card">
+                        <div class="card-header">
+                            <i class="fas fa-robot"></i>
+                            <h3>AI-Generated Answer</h3>
+                        </div>
+                        <div class="card-content" id="answerContent">
+                            <!-- Answer will appear here -->
+                        </div>
+                    </div>
+                    
+                    <!-- Sources -->
+                    <div class="sources-card">
+                        <div class="card-header">
+                            <i class="fas fa-book"></i>
+                            <h3>Sources Used</h3>
+                            <span class="badge" id="sourceCount">0</span>
+                        </div>
+                        <div class="card-content" id="sourcesContent">
+                            <!-- Sources will appear here -->
+                        </div>
+                    </div>
+                    
+                    <!-- JSON View -->
+                    <div class="json-card">
+                        <div class="card-header">
+                            <i class="fas fa-code"></i>
+                            <h3>API Response</h3>
+                            <button id="toggleJson" class="btn-small">
+                                <i class="fas fa-eye"></i> Show
+                            </button>
+                        </div>
+                        <div class="card-content" id="jsonContent" style="display: none;">
+                            <pre id="jsonOutput"></pre>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Loading Section -->
+            <section class="loading-section" id="loadingSection" style="display: none;">
+                <div class="loader">
+                    <div class="spinner"></div>
+                    <h3>Researching your question...</h3>
+                    <p class="loader-text" id="loaderText">Gathering information from multiple sources</p>
+                    <div class="source-status">
+                        <div class="status-item" id="wikiStatus">
+                            <i class="fab fa-wikipedia-w"></i> Wikipedia
+                        </div>
+                        <div class="status-item" id="arxivStatus">
+                            <i class="fas fa-graduation-cap"></i> arXiv
+                        </div>
+                        <div class="status-item" id="newsStatus">
+                            <i class="fas fa-newspaper"></i> NewsAPI
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-content">
+                <div class="tech-stack">
+                    <h4>Powered by:</h4>
+                    <div class="tech-icons">
+                        <span class="tech-icon"><i class="fab fa-openai"></i> OpenAI</span>
+                        <span class="tech-icon"><i class="fab fa-wikipedia-w"></i> Wikipedia</span>
+                        <span class="tech-icon"><i class="fas fa-graduation-cap"></i> arXiv</span>
+                        <span class="tech-icon"><i class="fas fa-newspaper"></i> NewsAPI</span>
+                    </div>
+                </div>
+                <div class="footer-info">
+                    <p>Universal Research Assistant v1.0.0</p>
+                    <p>Built with FastAPI & vanilla JavaScript</p>
+                    <p id="apiStatus">API Status: <span class="status-indicator" id="apiStatusIndicator">Checking...</span></p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
