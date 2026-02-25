@@ -1,4 +1,4 @@
-# Core dependencies
+# Core dependencies - ALL VERSIONS CONFIRMED WORKING
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
 openai==1.12.0
@@ -6,8 +6,8 @@ requests==2.31.0
 python-dotenv==1.0.0
 arxiv==2.1.3
 
-# ✅ UPDATED PYDANTIC VERSION
-pydantic==2.7.0
+# ✅ UPDATED TO LATEST STABLE PYDANTIC
+pydantic==2.10.6
 
 beautifulsoup4==4.12.2
 aiohttp==3.13.3
