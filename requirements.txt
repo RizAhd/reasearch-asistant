@@ -1,6 +1,6 @@
 fastapi==0.115.12
 uvicorn[standard]==0.24.0
-openai==1.12.0
+openai==1.61.0  # Update from 1.12.0 to latest stable
 requests==2.32.3
 python-dotenv==1.0.0
 arxiv==2.1.3
