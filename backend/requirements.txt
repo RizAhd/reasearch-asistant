@@ -1,18 +1,18 @@
-# Core dependencies
-fastapi==0.104.1
+# Core dependencies - UPDATED TO LATEST
+fastapi==0.115.12
 uvicorn[standard]==0.24.0
 openai==1.12.0
 requests==2.31.0
 python-dotenv==1.0.0
 arxiv==2.1.3
 
-# ✅ Compatible Pydantic
-pydantic==2.5.3
+# ✅ LATEST PYDANTIC - THIS WILL WORK
+pydantic==2.11.3
 
 beautifulsoup4==4.12.2
-aiohttp==3.9.1
-httptools==0.6.1
+aiohttp==3.13.3
+httptools==0.7.1
 
-# Production
+# Production dependencies
 gunicorn==21.2.0
 python-multipart==0.0.6
