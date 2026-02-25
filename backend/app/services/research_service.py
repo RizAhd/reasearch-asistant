@@ -12,7 +12,7 @@ class ResearchService:
     def __init__(self):
         self.services = {
             "wikipedia": wikipedia_service,
-            "arxiv": arxiv_service,
+            # "arxiv": arxiv_service,
             "news": news_service
         }
     
@@ -21,7 +21,7 @@ class ResearchService:
         start_time = time.time()
         
         if include_sources is None:
-            include_sources = ["wikipedia", "arxiv", "news"]
+            include_sources = ["wikipedia",  "news"]
         
         print(f"🔍 Researching: {query}")
         print(f"📚 Including sources: {include_sources}")
@@ -34,9 +34,9 @@ class ResearchService:
             wiki_task = asyncio.to_thread(wikipedia_service.search, query)
             tasks.append(wiki_task)
         
-        if "arxiv" in include_sources:
-            arxiv_task = arxiv_service.search(query, max_results=2)
-            tasks.append(arxiv_task)
+        # if "arxiv" in include_sources:
+        #     arxiv_task = arxiv_service.search(query, max_results=2)
+        #     tasks.append(arxiv_task)
         
         if "news" in include_sources:
         
