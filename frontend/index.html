@@ -3,70 +3,175 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🔍 Universal Research Assistant</title>
+    <title>🔍 Nexus Research - AI-Powered Research Assistant</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Roboto+Mono:wght@300;400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <!-- Header -->
-        <header class="header">
-            <div class="logo">
-                <i class="fas fa-search"></i>
-                <h1>Universal Research Assistant</h1>
+    <div class="gradient-bg">
+        <div class="gradient-orb orb-1"></div>
+        <div class="gradient-orb orb-2"></div>
+        <div class="gradient-orb orb-3"></div>
+    </div>
+
+    <div class="app-container">
+        <!-- Navigation Bar -->
+        <nav class="navbar">
+            <div class="nav-brand">
+                <div class="brand-icon">
+                    <i class="fas fa-brain"></i>
+                </div>
+                <div class="brand-text">
+                    <h1>Nexus<span>Research</span></h1>
+                    <p>Intelligent Knowledge Synthesis</p>
+                </div>
             </div>
-            <p class="tagline">Combine Wikipedia, arXiv & NewsAPI with AI synthesis</p>
-        </header>
+            <div class="nav-status">
+                <div class="status-badge" id="apiStatusBadge">
+                    <span class="status-dot"></span>
+                    <span class="status-text">API Connected</span>
+                </div>
+            </div>
+        </nav>
 
         <!-- Main Content -->
         <main class="main-content">
-            <!-- Input Section -->
-            <section class="input-section">
-                <div class="input-container">
-                    <div class="input-header">
-                        <i class="fas fa-question-circle"></i>
-                        <h2>What would you like to research?</h2>
+            <!-- Hero Section -->
+            <section class="hero-section">
+                <h2>Explore Anything,<br><span class="gradient-text">Get Comprehensive Answers</span></h2>
+                <p class="hero-subtitle">Combine Wikipedia knowledge with real-time news, synthesized by AI</p>
+            </section>
+
+            <!-- Search Section -->
+            <section class="search-section">
+                <div class="search-card">
+                    <div class="search-header">
+                        <div class="header-icon">
+                            <i class="fas fa-magic"></i>
+                        </div>
+                        <h3>What would you like to research?</h3>
                     </div>
                     
-                    <textarea 
-                        id="queryInput" 
-                        placeholder="Enter your research question here... 
-Example: 'What is quantum computing?' 
-'Or 'Latest developments in renewable energy'"
-                        rows="3"></textarea>
+                    <div class="search-input-container">
+                        <textarea 
+                            id="queryInput" 
+                            placeholder="e.g., 'Explain quantum computing' or 'Latest developments in renewable energy'"
+                            rows="3"
+                        ></textarea>
+                        <div class="input-char-counter" id="charCounter">0/500</div>
+                    </div>
                     
-                    <div class="controls">
+                    <div class="search-controls">
                         <div class="control-group">
-                            <label for="depthSelect">
-                                <i class="fas fa-layer-group"></i> Research Depth:
+                            <label class="control-label">
+                                <i class="fas fa-layer-group"></i>
+                                Research Depth
                             </label>
-                            <select id="depthSelect">
-                                <option value="quick">Quick (Wikipedia only)</option>
-                                <option value="balanced" selected>Balanced (Recommended)</option>
-                                <option value="deep">Deep (All sources, detailed)</option>
-                            </select>
+                            <div class="depth-selector">
+                                <button class="depth-option active" data-depth="quick">
+                                    <i class="fas fa-bolt"></i>
+                                    <span>Quick</span>
+                                    <small>Wikipedia only</small>
+                                </button>
+                                <button class="depth-option" data-depth="balanced">
+                                    <i class="fas fa-scale-balanced"></i>
+                                    <span>Balanced</span>
+                                    <small>Recommended</small>
+                                </button>
+                                <button class="depth-option" data-depth="deep">
+                                    <i class="fas fa-compass"></i>
+                                    <span>Deep</span>
+                                    <small>All sources</small>
+                                </button>
+                            </div>
                         </div>
                         
                         <div class="control-group">
-                            <label>
-                                <i class="fas fa-database"></i> Sources:
+                            <label class="control-label">
+                                <i class="fas fa-database"></i>
+                                Sources
                             </label>
-                            <div class="source-checkboxes">
-                                <label><input type="checkbox" name="source" value="wikipedia" checked> Wikipedia</label>
-                                <label><input type="checkbox" name="source" value="arxiv" checked> arXiv</label>
-                                <label><input type="checkbox" name="source" value="news" checked> News</label>
+                            <div class="source-toggles">
+                                <label class="source-toggle">
+                                    <input type="checkbox" name="source" value="wikipedia" checked>
+                                    <span class="toggle-content">
+                                        <i class="fab fa-wikipedia-w"></i>
+                                        <span>Wikipedia</span>
+                                    </span>
+                                </label>
+                                <label class="source-toggle">
+                                    <input type="checkbox" name="source" value="news" checked>
+                                    <span class="toggle-content">
+                                        <i class="fas fa-newspaper"></i>
+                                        <span>NewsAPI</span>
+                                    </span>
+                                </label>
                             </div>
                         </div>
                     </div>
                     
-                    <div class="button-container">
+                    <div class="action-buttons">
                         <button id="researchBtn" class="btn-primary">
-                            <i class="fas fa-search"></i> Start Research
+                            <i class="fas fa-search"></i>
+                            <span>Start Research</span>
                         </button>
                         <button id="clearBtn" class="btn-secondary">
-                            <i class="fas fa-eraser"></i> Clear
+                            <i class="fas fa-eraser"></i>
+                            <span>Clear</span>
                         </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Progress Section -->
+            <section class="progress-section" id="progressSection" style="display: none;">
+                <div class="progress-card">
+                    <div class="progress-header">
+                        <h3>Research in Progress</h3>
+                        <span class="progress-timer" id="progressTimer">0s</span>
+                    </div>
+                    <div class="progress-steps">
+                        <div class="progress-step" id="stepAnalyze">
+                            <div class="step-indicator">
+                                <i class="fas fa-magnifying-glass"></i>
+                            </div>
+                            <div class="step-content">
+                                <span class="step-title">Analyzing Query</span>
+                                <span class="step-status" id="stepAnalyzeStatus">Processing...</span>
+                            </div>
+                            <div class="step-loader"></div>
+                        </div>
+                        <div class="progress-step" id="stepWikipedia">
+                            <div class="step-indicator">
+                                <i class="fab fa-wikipedia-w"></i>
+                            </div>
+                            <div class="step-content">
+                                <span class="step-title">Wikipedia</span>
+                                <span class="step-status" id="stepWikipediaStatus">Waiting...</span>
+                            </div>
+                            <div class="step-loader"></div>
+                        </div>
+                        <div class="progress-step" id="stepNews">
+                            <div class="step-indicator">
+                                <i class="fas fa-newspaper"></i>
+                            </div>
+                            <div class="step-content">
+                                <span class="step-title">NewsAPI</span>
+                                <span class="step-status" id="stepNewsStatus">Waiting...</span>
+                            </div>
+                            <div class="step-loader"></div>
+                        </div>
+                        <div class="progress-step" id="stepAI">
+                            <div class="step-indicator">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <div class="step-content">
+                                <span class="step-title">AI Synthesis</span>
+                                <span class="step-status" id="stepAIStatus">Waiting...</span>
+                            </div>
+                            <div class="step-loader"></div>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -74,66 +179,34 @@ Example: 'What is quantum computing?'
             <!-- Results Section -->
             <section class="results-section" id="resultsSection" style="display: none;">
                 <div class="results-header">
-                    <i class="fas fa-chart-line"></i>
-                    <h2>Research Results</h2>
-                    <div class="stats" id="stats"></div>
+                    <div class="results-title">
+                        <i class="fas fa-chart-line"></i>
+                        <h2>Research Results</h2>
+                    </div>
+                    <div class="results-metrics" id="resultsMetrics"></div>
                 </div>
                 
-                <div class="results-container">
-                    <!-- Answer -->
-                    <div class="answer-card">
+                <div class="results-grid">
+                    <!-- Answer Card -->
+                    <div class="result-card answer-card">
                         <div class="card-header">
                             <i class="fas fa-robot"></i>
                             <h3>AI-Generated Answer</h3>
                         </div>
-                        <div class="card-content" id="answerContent">
+                        <div class="card-body" id="answerContent">
                             <!-- Answer will appear here -->
                         </div>
                     </div>
                     
-                    <!-- Sources -->
-                    <div class="sources-card">
+                    <!-- Sources Card -->
+                    <div class="result-card sources-card">
                         <div class="card-header">
                             <i class="fas fa-book"></i>
-                            <h3>Sources Used</h3>
-                            <span class="badge" id="sourceCount">0</span>
+                            <h3>Sources</h3>
+                            <span class="source-badge" id="sourceCount">0</span>
                         </div>
-                        <div class="card-content" id="sourcesContent">
+                        <div class="card-body" id="sourcesContent">
                             <!-- Sources will appear here -->
-                        </div>
-                    </div>
-                    
-                    <!-- JSON View -->
-                    <div class="json-card">
-                        <div class="card-header">
-                            <i class="fas fa-code"></i>
-                            <!-- <h3>API Response</h3>
-                            <button id="toggleJson" class="btn-small">
-                                <i class="fas fa-eye"></i> Show
-                            </button> -->
-                        </div>
-                        <div class="card-content" id="jsonContent" style="display: none;">
-                            <pre id="jsonOutput"></pre>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Loading Section -->
-            <section class="loading-section" id="loadingSection" style="display: none;">
-                <div class="loader">
-                    <div class="spinner"></div>
-                    <h3>Researching your question...</h3>
-                    <p class="loader-text" id="loaderText">Gathering information from multiple sources</p>
-                    <div class="source-status">
-                        <div class="status-item" id="wikiStatus">
-                            <i class="fab fa-wikipedia-w"></i> Wikipedia
-                        </div>
-                        <div class="status-item" id="arxivStatus">
-                            <i class="fas fa-graduation-cap"></i> arXiv
-                        </div>
-                        <div class="status-item" id="newsStatus">
-                            <i class="fas fa-newspaper"></i> NewsAPI
                         </div>
                     </div>
                 </div>
@@ -143,19 +216,14 @@ Example: 'What is quantum computing?'
         <!-- Footer -->
         <footer class="footer">
             <div class="footer-content">
-                <div class="tech-stack">
-                    <h4>Powered by:</h4>
-                    <div class="tech-icons">
-                        <span class="tech-icon"><i class="fab fa-openai"></i> OpenAI</span>
-                        <span class="tech-icon"><i class="fab fa-wikipedia-w"></i> Wikipedia</span>
-                        <span class="tech-icon"><i class="fas fa-graduation-cap"></i> arXiv</span>
-                        <span class="tech-icon"><i class="fas fa-newspaper"></i> NewsAPI</span>
-                    </div>
+                <div class="footer-tech">
+                    <span class="tech-item"><i class="fab fa-openai"></i> OpenAI GPT</span>
+                    <span class="tech-item"><i class="fab fa-wikipedia-w"></i> Wikipedia</span>
+                    <span class="tech-item"><i class="fas fa-newspaper"></i> NewsAPI</span>
                 </div>
                 <div class="footer-info">
-                    <p>Universal Research Assistant v1.0.0</p>
-                    <p>Built with FastAPI & vanilla JavaScript</p>
-                    <p id="apiStatus">API Status: <span class="status-indicator" id="apiStatusIndicator">Checking...</span></p>
+                    <p>Nexus Research v2.0 | Built with FastAPI & Vanilla JS</p>
+                    <p class="copyright">© 2024 • AI-Powered Research Assistant</p>
                 </div>
             </div>
         </footer>

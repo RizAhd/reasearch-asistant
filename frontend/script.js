@@ -4,37 +4,41 @@ const DEFAULT_QUERY = 'What is artificial intelligence?';
 
 // DOM Elements
 const queryInput = document.getElementById('queryInput');
-const depthSelect = document.getElementById('depthSelect');
 const researchBtn = document.getElementById('researchBtn');
 const clearBtn = document.getElementById('clearBtn');
 const resultsSection = document.getElementById('resultsSection');
-const loadingSection = document.getElementById('loadingSection');
+const progressSection = document.getElementById('progressSection');
 const answerContent = document.getElementById('answerContent');
 const sourcesContent = document.getElementById('sourcesContent');
 const sourceCount = document.getElementById('sourceCount');
-const jsonOutput = document.getElementById('jsonOutput');
-const jsonContent = document.getElementById('jsonContent');
-const toggleJsonBtn = document.getElementById('toggleJson');
 const statsElement = document.getElementById('stats');
-const apiStatusIndicator = document.getElementById('apiStatusIndicator');
-const loaderText = document.getElementById('loaderText');
-const wikiStatus = document.getElementById('wikiStatus');
-const arxivStatus = document.getElementById('arxivStatus');
-const newsStatus = document.getElementById('newsStatus');
+const apiStatusBadge = document.getElementById('apiStatusBadge');
+const charCounter = document.getElementById('charCounter');
+const progressTimer = document.getElementById('progressTimer');
+const depthOptions = document.querySelectorAll('.depth-option');
+const sourceToggles = document.querySelectorAll('input[name="source"]');
+
+// Progress step elements
+const stepAnalyze = document.getElementById('stepAnalyze');
+const stepWikipedia = document.getElementById('stepWikipedia');
+const stepNews = document.getElementById('stepNews');
+const stepAI = document.getElementById('stepAI');
+const stepAnalyzeStatus = document.getElementById('stepAnalyzeStatus');
+const stepWikipediaStatus = document.getElementById('stepWikipediaStatus');
+const stepNewsStatus = document.getElementById('stepNewsStatus');
+const stepAIStatus = document.getElementById('stepAIStatus');
+
+// State
+let currentDepth = 'balanced';
+let startTime = null;
+let timerInterval = null;
 
 // Initialize
 document.addEventListener('DOMContentLoaded', function() {
-    // Set default query
     queryInput.value = DEFAULT_QUERY;
-    
-    // Check API health
+    updateCharCounter();
     checkAPIHealth();
-    
-    // Set up event listeners
     setupEventListeners();
-    
-    // Auto-resize textarea
-    queryInput.addEventListener('input', autoResizeTextarea);
     autoResizeTextarea();
 });
 
@@ -42,23 +46,37 @@ function setupEventListeners() {
     // Research button
     researchBtn.addEventListener('click', performResearch);
     
-    // Enter key in textarea
+    // Enter key in textarea (Ctrl+Enter)
     queryInput.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter' && e.ctrlKey) {
+        if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
             performResearch();
         }
     });
     
+    // Character counter
+    queryInput.addEventListener('input', () => {
+        autoResizeTextarea();
+        updateCharCounter();
+    });
+    
     // Clear button
-    clearBtn.addEventListener('click', clearResults);
+    clearBtn.addEventListener('click', clearAll);
     
-    // Toggle JSON view
-    toggleJsonBtn.addEventListener('click', toggleJsonView);
+    // Depth selector
+    depthOptions.forEach(option => {
+        option.addEventListener('click', () => {
+            depthOptions.forEach(opt => opt.classList.remove('active'));
+            option.classList.add('active');
+            currentDepth = option.dataset.depth;
+        });
+    });
     
-    // Source checkboxes
-    document.querySelectorAll('input[name="source"]').forEach(checkbox => {
+    // Source toggles
+    sourceToggles.forEach(checkbox => {
         checkbox.addEventListener('change', updateResearchButton);
     });
+    
+    updateResearchButton();
 }
 
 function autoResizeTextarea() {
@@ -66,107 +84,121 @@ function autoResizeTextarea() {
     queryInput.style.height = Math.min(queryInput.scrollHeight, 200) + 'px';
 }
 
+function updateCharCounter() {
+    const length = queryInput.value.length;
+    charCounter.textContent = `${length}/500`;
+    charCounter.style.color = length > 450 ? '#ef4444' : '#94a3b8';
+}
+
+function updateResearchButton() {
+    const checkedSources = Array.from(sourceToggles).filter(cb => cb.checked);
+    researchBtn.disabled = checkedSources.length === 0;
+    researchBtn.style.opacity = researchBtn.disabled ? '0.5' : '1';
+    researchBtn.style.cursor = researchBtn.disabled ? 'not-allowed' : 'pointer';
+}
+
 async function checkAPIHealth() {
     try {
         const response = await fetch(`${API_BASE_URL}/health`);
         const data = await response.json();
         
-        apiStatusIndicator.textContent = 'Connected';
-        apiStatusIndicator.className = 'status-indicator connected';
-        
-        console.log('API Health:', data);
-    } catch (error) {
-        apiStatusIndicator.textContent = 'Disconnected';
-        apiStatusIndicator.className = 'status-indicator disconnected';
-        
-        console.error('API Health check failed:', error);
-        
-        // Show error in results if available
-        if (resultsSection.style.display !== 'none') {
-            answerContent.innerHTML = `
-                <div class="error-message">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <h4>API Connection Error</h4>
-                    <p>Could not connect to the Research Assistant API. Make sure:</p>
-                    <ul>
-                        <li>The backend server is running</li>
-                        <li>You're using the correct API URL</li>
-                        <li>There are no network restrictions</li>
-                    </ul>
-                    <p>Error: ${error.message}</p>
-                </div>
+        if (response.ok) {
+            apiStatusBadge.innerHTML = `
+                <span class="status-dot"></span>
+                <span class="status-text">API Connected</span>
             `;
+            apiStatusBadge.style.background = 'rgba(16, 185, 129, 0.1)';
+            apiStatusBadge.style.borderColor = 'rgba(16, 185, 129, 0.2)';
+        } else {
+            throw new Error('Health check failed');
         }
+    } catch (error) {
+        apiStatusBadge.innerHTML = `
+            <span class="status-dot" style="background: #ef4444;"></span>
+            <span class="status-text">API Disconnected</span>
+        `;
+        apiStatusBadge.style.background = 'rgba(239, 68, 68, 0.1)';
+        apiStatusBadge.style.borderColor = 'rgba(239, 68, 68, 0.2)';
     }
-}
-
-function updateResearchButton() {
-    const checkedSources = Array.from(document.querySelectorAll('input[name="source"]:checked'));
-    researchBtn.disabled = checkedSources.length === 0;
-    researchBtn.innerHTML = researchBtn.disabled 
-        ? '<i class="fas fa-ban"></i> Select at least one source'
-        : '<i class="fas fa-search"></i> Start Research';
 }
 
 async function performResearch() {
     const query = queryInput.value.trim();
     
     if (!query) {
-        alert('Please enter a research question');
+        showError('Please enter a research question');
         return;
     }
     
-    // Get selected sources
-    const selectedSources = Array.from(document.querySelectorAll('input[name="source"]:checked'))
+    const selectedSources = Array.from(sourceToggles)
+        .filter(cb => cb.checked)
         .map(cb => cb.value);
     
     if (selectedSources.length === 0) {
-        alert('Please select at least one source');
+        showError('Please select at least one source');
         return;
     }
     
-    // Show loading, hide results
-    loadingSection.style.display = 'block';
+    // Hide results, show progress
     resultsSection.style.display = 'none';
+    progressSection.style.display = 'block';
+    resetProgress();
     
-    // Reset status indicators
-    resetStatusIndicators();
+    // Start timer
+    startTimer();
     
     // Prepare request data
     const requestData = {
         query: query,
-        depth: depthSelect.value,
+        depth: currentDepth,
         include_sources: selectedSources,
-        max_sources: 5
+        max_sources: currentDepth === 'deep' ? 8 : currentDepth === 'quick' ? 3 : 5
     };
     
-    console.log('Sending request:', requestData);
-    
     try {
-        // Simulate source fetching progress
-        simulateSourceFetching(selectedSources);
+        // Step 1: Analyzing
+        updateStep('analyze', 'active', 'Processing...');
+        
+        // Step 2: Wikipedia
+        if (selectedSources.includes('wikipedia')) {
+            updateStep('wikipedia', 'active', 'Searching...');
+            await new Promise(r => setTimeout(r, 800));
+            updateStep('wikipedia', 'completed', 'Complete');
+        }
+        
+        // Step 3: News
+        if (selectedSources.includes('news')) {
+            updateStep('news', 'active', 'Fetching...');
+            await new Promise(r => setTimeout(r, 1200));
+            updateStep('news', 'completed', 'Complete');
+        }
+        
+        // Step 4: AI Synthesis
+        updateStep('ai', 'active', 'Generating answer...');
         
         // Make API request
         const response = await fetch(`${API_BASE_URL}/research`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(requestData)
         });
         
         if (!response.ok) {
-            throw new Error(`API returned ${response.status}: ${response.statusText}`);
+            const error = await response.json();
+            throw new Error(error.detail || `API returned ${response.status}`);
         }
         
         const data = await response.json();
         
-        // Update all status indicators to complete
-        updateAllStatusIndicators('complete');
+        // Complete AI step
+        updateStep('ai', 'completed', 'Complete');
         
-        // Hide loading, show results
+        // Stop timer
+        stopTimer();
+        
+        // Hide progress, show results
         setTimeout(() => {
-            loadingSection.style.display = 'none';
+            progressSection.style.display = 'none';
             displayResults(data);
             resultsSection.style.display = 'block';
             scrollToResults();
@@ -174,74 +206,65 @@ async function performResearch() {
         
     } catch (error) {
         console.error('Research error:', error);
-        
-        loadingSection.style.display = 'none';
-        
-        answerContent.innerHTML = `
-            <div class="error-message">
-                <i class="fas fa-exclamation-triangle"></i>
-                <h4>Research Failed</h4>
-                <p>${error.message}</p>
-                <p>Please check:</p>
-                <ul>
-                    <li>Your internet connection</li>
-                    <li>API keys configuration</li>
-                    <li>Rate limits (free APIs have limits)</li>
-                </ul>
-                <button onclick="performResearch()" class="btn-primary">
-                    <i class="fas fa-redo"></i> Try Again
-                </button>
-            </div>
-        `;
-        
+        stopTimer();
+        progressSection.style.display = 'none';
+        showError(error.message);
         resultsSection.style.display = 'block';
     }
 }
 
-function resetStatusIndicators() {
-    [wikiStatus, arxivStatus, newsStatus].forEach(el => {
-        el.className = 'status-item pending';
-        el.innerHTML = el.innerHTML.replace('✓', '<i class="fas fa-spinner fa-spin"></i>');
+function updateStep(step, status, message) {
+    const elements = {
+        analyze: { step: stepAnalyze, status: stepAnalyzeStatus },
+        wikipedia: { step: stepWikipedia, status: stepWikipediaStatus },
+        news: { step: stepNews, status: stepNewsStatus },
+        ai: { step: stepAI, status: stepAIStatus }
+    };
+    
+    const element = elements[step];
+    if (!element) return;
+    
+    // Remove previous status classes
+    element.step.classList.remove('active', 'completed');
+    
+    if (status === 'active') {
+        element.step.classList.add('active');
+    } else if (status === 'completed') {
+        element.step.classList.add('completed');
+    }
+    
+    if (element.status) {
+        element.status.textContent = message;
+    }
+}
+
+function resetProgress() {
+    const steps = ['analyze', 'wikipedia', 'news', 'ai'];
+    steps.forEach(step => {
+        updateStep(step, '', 'Waiting...');
     });
 }
 
-function simulateSourceFetching(sources) {
-    let progress = 0;
-    const steps = ['Analyzing query...', 'Searching Wikipedia...', 'Fetching academic papers...', 
-                   'Getting latest news...', 'Synthesizing information...'];
-    
-    const interval = setInterval(() => {
-        if (progress < steps.length) {
-            loaderText.textContent = steps[progress];
-            progress++;
-        } else {
-            clearInterval(interval);
+function startTimer() {
+    startTime = Date.now();
+    timerInterval = setInterval(() => {
+        if (startTime) {
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            progressTimer.textContent = `${elapsed}s`;
         }
-    }, 800);
-    
-    // Update source status indicators
-    sources.forEach(source => {
-        setTimeout(() => {
-            const element = document.getElementById(`${source}Status`);
-            if (element) {
-                element.className = 'status-item active';
-                element.innerHTML = element.innerHTML.replace('fa-spinner fa-spin', 'fa-check');
-            }
-        }, Math.random() * 1500 + 1000);
-    });
+    }, 100);
 }
 
-function updateAllStatusIndicators(status) {
-    [wikiStatus, arxivStatus, newsStatus].forEach(el => {
-        if (status === 'complete') {
-            el.className = 'status-item active';
-            el.innerHTML = el.innerHTML.replace('fa-spinner fa-spin', 'fa-check');
-        }
-    });
+function stopTimer() {
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+    }
+    startTime = null;
 }
 
 function displayResults(data) {
-    // Display answer with formatted citations
+    // Display answer
     answerContent.innerHTML = formatAnswer(data.answer);
     
     // Display sources
@@ -250,94 +273,111 @@ function displayResults(data) {
     // Update source count
     sourceCount.textContent = data.sources.length;
     
-    // Display stats
-    displayStats(data);
-    
-    // Display raw JSON
-    jsonOutput.textContent = JSON.stringify(data, null, 2);
-    
-    // Highlight JSON syntax
-    highlightJSON();
+    // Display metrics
+    displayMetrics(data);
 }
 
 function formatAnswer(answer) {
-    // Convert markdown-like formatting to HTML
     let formatted = answer
-        // Citations [1], [2]
         .replace(/\[(\d+)\]/g, '<sup class="citation">[$1]</sup>')
-        // Bold text
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        // Italic text
         .replace(/\*(.*?)\*/g, '<em>$1</em>')
-        // Headers
         .replace(/^### (.*$)/gm, '<h4>$1</h4>')
         .replace(/^## (.*$)/gm, '<h3>$1</h3>')
         .replace(/^# (.*$)/gm, '<h2>$1</h2>')
-        // Lists
         .replace(/^\s*[-*]\s+(.*$)/gm, '<li>$1</li>')
-        .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>')
-        // Paragraphs
         .replace(/\n\n/g, '</p><p>');
     
-    // Wrap in paragraph if not already
-    if (!formatted.startsWith('<')) {
-        formatted = '<p>' + formatted + '</p>';
-    }
-    
-    return formatted;
+    return `<div class="answer-content">${formatted}</div>`;
 }
 
 function displaySources(sources) {
     if (!sources || sources.length === 0) {
-        sourcesContent.innerHTML = '<p class="no-sources">No sources found for this query.</p>';
+        sourcesContent.innerHTML = '<div class="no-sources">No sources found</div>';
         return;
     }
     
-    sourcesContent.innerHTML = sources.map((source, index) => `
-        <div class="source-item">
-            <div class="source-title">${index + 1}. ${escapeHtml(source.title)}</div>
-            <div class="source-meta">
-                <span class="source-type">
-                    <i class="fas fa-${getSourceIcon(source.source_type)}"></i>
-                    ${capitalizeFirst(source.source_type)}
-                </span>
-                ${source.metadata && source.metadata.published 
-                    ? `<span class="source-date">
-                         <i class="far fa-calendar"></i>
-                         ${source.metadata.published}
-                       </span>`
-                    : ''
-                }
-            </div>
-            <div class="source-content">${truncateText(escapeHtml(source.content), 150)}</div>
-            <a href="${source.url}" target="_blank" class="source-link">
-                <i class="fas fa-external-link-alt"></i> View Source
-            </a>
-        </div>
-    `).join('');
-}
-
-function displayStats(data) {
-    statsElement.innerHTML = `
-        <div class="stat-item">
-            <i class="fas fa-clock"></i> ${data.processing_time}s
-        </div>
-        <div class="stat-item">
-            <i class="fas fa-brain"></i> ${data.tokens_used} tokens
-        </div>
-        <div class="stat-item">
-            <i class="fas fa-database"></i> ${data.sources.length} sources
+    sourcesContent.innerHTML = `
+        <div class="sources-list">
+            ${sources.map((source, index) => `
+                <div class="source-item">
+                    <div class="source-header">
+                        <div class="source-icon">
+                            <i class="fas fa-${getSourceIcon(source.source_type)}"></i>
+                        </div>
+                        <div class="source-title">${escapeHtml(source.title)}</div>
+                    </div>
+                    <div class="source-meta">
+                        <span><i class="fas fa-tag"></i> ${capitalizeFirst(source.source_type)}</span>
+                        ${source.metadata?.published ? 
+                            `<span><i class="far fa-calendar"></i> ${source.metadata.published}</span>` : ''}
+                    </div>
+                    <div class="source-content">${truncateText(escapeHtml(source.content), 200)}</div>
+                    <a href="${source.url}" target="_blank" class="source-link">
+                        <span>View Source</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            `).join('')}
         </div>
     `;
 }
 
-function getSourceIcon(sourceType) {
+function displayMetrics(data) {
+    const metricsContainer = document.getElementById('resultsMetrics');
+    if (!metricsContainer) return;
+    
+    metricsContainer.innerHTML = `
+        <div class="metric">
+            <i class="fas fa-clock"></i>
+            <span>${data.processing_time}s</span>
+        </div>
+        <div class="metric">
+            <i class="fas fa-brain"></i>
+            <span>${data.tokens_used} tokens</span>
+        </div>
+        <div class="metric">
+            <i class="fas fa-database"></i>
+            <span>${data.sources.length} sources</span>
+        </div>
+    `;
+}
+
+function showError(message) {
+    answerContent.innerHTML = `
+        <div class="error-message">
+            <i class="fas fa-exclamation-triangle"></i>
+            <h4>Research Failed</h4>
+            <p>${message}</p>
+            <button onclick="performResearch()" class="btn-primary" style="margin-top: 20px;">
+                <i class="fas fa-redo"></i> Try Again
+            </button>
+        </div>
+    `;
+}
+
+function clearAll() {
+    queryInput.value = '';
+    resultsSection.style.display = 'none';
+    progressSection.style.display = 'none';
+    answerContent.innerHTML = '';
+    sourcesContent.innerHTML = '';
+    sourceCount.textContent = '0';
+    autoResizeTextarea();
+    updateCharCounter();
+    stopTimer();
+}
+
+function scrollToResults() {
+    resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function getSourceIcon(type) {
     const icons = {
         'wikipedia': 'wikipedia-w',
-        'arxiv': 'graduation-cap',
         'news': 'newspaper'
     };
-    return icons[sourceType] || 'file-alt';
+    return icons[type] || 'file-alt';
 }
 
 function capitalizeFirst(string) {
@@ -345,6 +385,7 @@ function capitalizeFirst(string) {
 }
 
 function truncateText(text, maxLength) {
+    if (!text) return '';
     if (text.length <= maxLength) return text;
     return text.substr(0, maxLength).trim() + '...';
 }
@@ -355,92 +396,12 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-function highlightJSON() {
-    const jsonString = jsonOutput.textContent;
-    let highlighted = jsonString
-        .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|\b-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?\b)/g, 
-            function(match) {
-                let cls = 'json-number';
-                if (/^"/.test(match)) {
-                    if (/:$/.test(match)) {
-                        cls = 'json-key';
-                    } else {
-                        cls = 'json-string';
-                    }
-                } else if (/true|false/.test(match)) {
-                    cls = 'json-boolean';
-                } else if (/null/.test(match)) {
-                    cls = 'json-null';
-                }
-                return `<span class="${cls}">${match}</span>`;
-            });
-    
-    jsonOutput.innerHTML = highlighted;
-}
-
-function toggleJsonView() {
-    const isVisible = jsonContent.style.display !== 'none';
-    jsonContent.style.display = isVisible ? 'none' : 'block';
-    toggleJsonBtn.innerHTML = isVisible 
-        ? '<i class="fas fa-eye"></i> Show' 
-        : '<i class="fas fa-eye-slash"></i> Hide';
-}
-
-function clearResults() {
-    queryInput.value = '';
-    resultsSection.style.display = 'none';
-    answerContent.innerHTML = '';
-    sourcesContent.innerHTML = '';
-    jsonOutput.textContent = '';
-    statsElement.innerHTML = '';
-    sourceCount.textContent = '0';
-    autoResizeTextarea();
-}
-
-function scrollToResults() {
-    resultsSection.scrollIntoView({ behavior: 'smooth' });
-}
-
-// Add some CSS for JSON highlighting
+// Add CSS for metrics if not present
 const style = document.createElement('style');
 style.textContent = `
-    .json-key { color: #f92672; }
-    .json-string { color: #a6e22e; }
-    .json-number { color: #ae81ff; }
-    .json-boolean { color: #fd971f; }
-    .json-null { color: #f92672; }
-    .citation { 
-        color: #4361ee;
-        font-weight: bold;
-        cursor: pointer;
-    }
-    .citation:hover {
-        text-decoration: underline;
-    }
-    .error-message {
-        background: #f8d7da;
-        border: 1px solid #f5c6cb;
-        border-radius: 10px;
-        padding: 20px;
-        color: #721c24;
-    }
-    .error-message i {
-        font-size: 2rem;
-        color: #dc3545;
-        margin-bottom: 15px;
-    }
-    .error-message h4 {
-        margin: 10px 0;
-        color: #721c24;
-    }
-    .error-message ul {
-        margin: 10px 0 10px 20px;
-    }
-    .no-sources {
-        text-align: center;
-        color: #6c757d;
-        font-style: italic;
-        padding: 40px 20px;
+    #resultsMetrics {
+        display: flex;
+        gap: 10px;
     }
 `;
 document.head.appendChild(style);
