@@ -32,11 +32,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Serve frontend static files in production
+# ✅ FIXED: Serve frontend static files in production
 if settings.is_production:
-    frontend_path = Path(__file__).parent.parent / "frontend"
+    # Go up TWO levels: from backend/app/ to project root, then to frontend
+    current_file = Path(__file__).resolve()  # backend/app/main.py
+    project_root = current_file.parent.parent.parent  # Go up 3 levels to project root
+    frontend_path = project_root / "frontend"
+    
+    print(f"🔍 Looking for frontend at: {frontend_path}")
+    print(f"📁 Frontend exists: {frontend_path.exists()}")
+    
     if frontend_path.exists():
         app.mount("/", StaticFiles(directory=str(frontend_path), html=True), name="frontend")
+        print("✅ Frontend mounted successfully!")
+    else:
+        print("❌ Frontend folder not found!")
 
 # Include routers
 app.include_router(research.router)
@@ -74,9 +84,13 @@ async def startup_event():
     print(f"📰 NewsAPI configured: {bool(settings.NEWS_API_KEY)}")
     
     if settings.is_production:
-        frontend_path = Path(__file__).parent.parent / "frontend"
-        print(f"📁 Frontend path: {frontend_path}")
+        current_file = Path(__file__).resolve()
+        project_root = current_file.parent.parent.parent
+        frontend_path = project_root / "frontend"
+        print(f"📁 Looking for frontend at: {frontend_path}")
         print(f"📁 Frontend exists: {frontend_path.exists()}")
+        if frontend_path.exists():
+            print(f"📁 Frontend contents: {list(frontend_path.glob('*'))}")
     
     print("✅ API ready!")
 
