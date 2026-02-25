@@ -8,7 +8,7 @@ arxiv==2.1.3
 pydantic==2.5.0
 beautifulsoup4==4.12.2
 
-# ✅ FIXED: aiohttp version that actually exists
+# ✅ CORRECTED VERSION
 aiohttp==3.13.3
 
 # Production dependencies
