@@ -1,7 +1,5 @@
 from fastapi import APIRouter, HTTPException, BackgroundTasks, Request
 from fastapi.responses import JSONResponse
-from typing import List, Optional
-import asyncio
 import time
 from ..schemas.request import ResearchRequest, ResearchDepth
 from ..schemas.response import ResearchResponse, HealthResponse
@@ -12,9 +10,7 @@ router = APIRouter(prefix="/api/v1", tags=["research"])
 
 # Simple rate limiting (in-memory)
 active_requests = {}
-REQUEST_LIMIT = 10  # Increased from 5 to 10
-
-# Store startup time
+REQUEST_LIMIT = 10
 startup_time = time.time()
 
 @router.get("/health", response_model=HealthResponse)
@@ -44,7 +40,7 @@ async def research_endpoint(
     - **max_sources**: Maximum number of sources to return
     """
     
-    # Simple rate limiting (in production, use Redis)
+    # Simple rate limiting
     client_ip = "demo"  # In production: request.client.host
     
     if client_ip in active_requests:
@@ -74,17 +70,13 @@ async def research_endpoint(
         # Adjust parameters based on depth
         if request.depth == ResearchDepth.QUICK:
             max_sources = 3
-            # For quick mode, only use Wikipedia
-            include_sources = ["wikipedia"]
+            include_sources = ["wikipedia"]  # Quick mode: Wikipedia only
         elif request.depth == ResearchDepth.DEEP:
             max_sources = 8
-            include_sources = request.include_sources or ["wikipedia", "news"]
+            include_sources = ["wikipedia", "news"]  # Deep mode: All sources
         else:  # balanced
             max_sources = request.max_sources or 5
-            include_sources = request.include_sources or ["wikipedia", "news"]
-        
-        # Filter out any arXiv references just in case
-        include_sources = [s for s in include_sources if s != "arxiv"]
+            include_sources = ["wikipedia", "news"]  # Balanced: Both sources
         
         # Perform research
         result = await research_service.research(
@@ -101,7 +93,7 @@ async def research_endpoint(
         print(f"Research endpoint error: {str(e)}")
         raise HTTPException(
             status_code=500,
-            detail=f"Research failed. Please try again."
+            detail=f"Research failed: {str(e)[:100]}"
         )
     finally:
         # Clean up rate limiting
@@ -133,7 +125,8 @@ async def test_endpoint():
         "endpoints": {
             "POST /api/v1/research": "Main research endpoint",
             "GET /api/v1/health": "Health check",
-            "GET /docs": "API documentation"
+            "GET /api/v1/test": "This endpoint",
+            "GET /api/v1/stats": "Usage statistics"
         },
         "available_sources": ["wikipedia", "news"],
         "environment": "production" if settings.is_production else "development"
