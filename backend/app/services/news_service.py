@@ -15,7 +15,7 @@ class NewsService:
             return []
         
         try:
-            # Calculate date from 30 days ago
+        
             from_date = (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d")
             
             params = {
@@ -39,13 +39,13 @@ class NewsService:
                 
                 results = []
                 for article in articles:
-                    # Filter out removed articles
+                
                     if (article.get('title') and 
                         article.get('title') != "[Removed]" and 
                         article.get('description')):
                         
                         content = article.get('description') or article.get('content') or ""
-                        # Clean content
+                        
                         if content:
                             content = content.strip()
                             if len(content) > 250:
@@ -71,6 +71,4 @@ class NewsService:
         except Exception as e:
             print(f"News service error: {e}")
             return []
-
-# Singleton instance
 news_service = NewsService()

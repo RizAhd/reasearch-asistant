@@ -13,10 +13,10 @@ class WikipediaService:
     def search(self, query: str, max_chars: int = 500) -> Optional[Dict]:
         """Search Wikipedia for information"""
         try:
-            # Clean query
+            
             clean_query = query.strip()
             
-            # First, try to get page directly
+        
             params = {
                 "action": "query",
                 "format": "json",
@@ -39,10 +39,10 @@ class WikipediaService:
                 pages = data.get("query", {}).get("pages", {})
                 
                 for page_id, page_info in pages.items():
-                    if page_id != "-1":  # Valid page
+                    if page_id != "-1":  
                         content = page_info.get('extract', '')
                         if content:
-                            # Clean and truncate
+                            
                             content = html.unescape(content)
                             if len(content) > max_chars:
                                 content = content[:max_chars] + "..."
@@ -57,7 +57,7 @@ class WikipediaService:
                                 }
                             }
             
-            # If direct page not found, search
+            #
             search_params = {
                 "action": "query",
                 "format": "json",
@@ -78,7 +78,7 @@ class WikipediaService:
                 search_results = search_data.get('query', {}).get('search', [])
                 
                 if search_results:
-                    # Try the first result
+            
                     first_result = search_results[0]
                     return self.search(first_result['title'])
             
@@ -88,5 +88,5 @@ class WikipediaService:
             print(f"Wikipedia service error: {e}")
             return None
 
-# Singleton instance
+
 wikipedia_service = WikipediaService()

@@ -9,9 +9,8 @@ import time
 
 router = APIRouter(prefix="/api/v1", tags=["research"])
 
-# Store active requests for rate limiting (simple in-memory solution)
 active_requests = {}
-REQUEST_LIMIT = 5  # Max concurrent requests per IP
+REQUEST_LIMIT = 5  
 
 @router.get("/health", response_model=HealthResponse)
 async def health_check():
@@ -39,9 +38,8 @@ async def research_endpoint(
     - **include_sources**: Which sources to use
     - **max_sources**: Maximum number of sources to return
     """
-    
-    # Simple rate limiting by IP (for demo)
-    client_ip = "demo"  # In production, get from request.client.host
+
+    client_ip = "demo"  
     
     if client_ip in active_requests:
         if active_requests[client_ip] >= REQUEST_LIMIT:
@@ -54,16 +52,16 @@ async def research_endpoint(
         active_requests[client_ip] = 1
     
     try:
-        # Adjust parameters based on depth
+    
         if request.depth == ResearchDepth.QUICK:
             max_sources = 3
             include_sources = ["wikipedia"]
         elif request.depth == ResearchDepth.DEEP:
             max_sources = 8
-        else:  # balanced
+        else:  
             max_sources = request.max_sources or 5
         
-        # Perform research
+        
         result = await research_service.research(
             query=request.query,
             include_sources=request.include_sources,
@@ -78,7 +76,7 @@ async def research_endpoint(
             detail=f"Research failed: {str(e)}"
         )
     finally:
-        # Clean up rate limiting
+    
         if client_ip in active_requests:
             active_requests[client_ip] -= 1
             if active_requests[client_ip] <= 0:
@@ -97,5 +95,5 @@ async def test_endpoint():
         "available_sources": ["wikipedia", "arxiv", "news"]
     }
 
-# Store startup time for uptime calculation
+
 startup_time = time.time()

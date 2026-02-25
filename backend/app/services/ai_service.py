@@ -19,7 +19,7 @@ class AIService:
                 "tokens_used": 0
             }
         
-        # Format sources for prompt
+        
         formatted_sources = self._format_sources(sources)
         
         system_prompt = """You are a helpful research assistant. Your task is to:
@@ -87,5 +87,4 @@ Please provide a well-researched answer with proper citations:"""
         
         return "\n\n".join(formatted)
 
-# Singleton instance
 ai_service = AIService()

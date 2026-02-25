@@ -17,15 +17,15 @@ class ArxivService:
             
             results = []
             async for paper in self.client.results(search):
-                # Clean summary
+                
                 summary = paper.summary
                 summary = summary.replace('\n', ' ').strip()
                 
-                # Remove excessive whitespace
+            
                 while '  ' in summary:
                     summary = summary.replace('  ', ' ')
                 
-                # Truncate
+
                 if len(summary) > 300:
                     summary = summary[:300] + "..."
                 
@@ -47,5 +47,5 @@ class ArxivService:
             print(f"arXiv service error: {e}")
             return []
 
-# Singleton instance
+
 arxiv_service = ArxivService()

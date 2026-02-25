@@ -5,7 +5,6 @@ from .routes import research
 import os
 from .config import settings
 
-# Create FastAPI app
 app = FastAPI(
     title="Universal Research Assistant API",
     description="AI-powered research assistant that combines Wikipedia, arXiv, and NewsAPI",
@@ -14,16 +13,16 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
-# Configure CORS
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, specify actual origins
+    allow_origins=["*"],  
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Include routers
+
 app.include_router(research.router)
 
 @app.get("/")
@@ -40,11 +39,11 @@ async def root():
 @app.on_event("startup")
 async def startup_event():
     """Runs on app startup"""
-    print("🚀 Research Assistant API starting...")
-    print(f"📊 Environment: {'Production' if settings.is_production else 'Development'}")
-    print(f"🔑 OpenAI configured: {bool(settings.OPENAI_API_KEY)}")
-    print(f"📰 NewsAPI configured: {bool(settings.NEWS_API_KEY)}")
-    print("✅ API ready!")
+    print(" Research Assistant API starting...")
+    print(f" Environment: {'Production' if settings.is_production else 'Development'}")
+    print(f" OpenAI configured: {bool(settings.OPENAI_API_KEY)}")
+    print(f" NewsAPI configured: {bool(settings.NEWS_API_KEY)}")
+    print(" API ready!")
 
 if __name__ == "__main__":
     import uvicorn
