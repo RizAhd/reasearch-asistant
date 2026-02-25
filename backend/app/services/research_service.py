@@ -4,7 +4,7 @@ from typing import List, Dict
 from datetime import datetime
 from ..schemas.response import ResearchResponse, Source
 from .wikipedia_service import wikipedia_service
-from .arxiv_service import arxiv_service
+# from .arxiv_service import arxiv_service
 from .news_service import news_service
 from .ai_service import ai_service
 
