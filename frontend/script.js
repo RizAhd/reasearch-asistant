@@ -11,12 +11,12 @@ const progressSection = document.getElementById('progressSection');
 const answerContent = document.getElementById('answerContent');
 const sourcesContent = document.getElementById('sourcesContent');
 const sourceCount = document.getElementById('sourceCount');
-const statsElement = document.getElementById('stats');
-const apiStatusBadge = document.getElementById('apiStatusBadge');
+const apiStatus = document.getElementById('apiStatus');
 const charCounter = document.getElementById('charCounter');
 const progressTimer = document.getElementById('progressTimer');
-const depthOptions = document.querySelectorAll('.depth-option');
-const sourceToggles = document.querySelectorAll('input[name="source"]');
+const depthBtns = document.querySelectorAll('.depth-btn');
+const sourceCheckboxes = document.querySelectorAll('input[name="source"]');
+const themeToggle = document.getElementById('themeToggle');
 
 // Progress step elements
 const stepAnalyze = document.getElementById('stepAnalyze');
@@ -33,8 +33,22 @@ let currentDepth = 'balanced';
 let startTime = null;
 let timerInterval = null;
 
-// Initialize
+// ===== THEME MANAGEMENT =====
+function initTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+}
+
+function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+}
+
+// ===== INITIALIZATION =====
 document.addEventListener('DOMContentLoaded', function() {
+    initTheme();
     queryInput.value = DEFAULT_QUERY;
     updateCharCounter();
     checkAPIHealth();
@@ -43,12 +57,18 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function setupEventListeners() {
+    // Theme toggle
+    if (themeToggle) {
+        themeToggle.addEventListener('click', toggleTheme);
+    }
+    
     // Research button
     researchBtn.addEventListener('click', performResearch);
     
-    // Enter key in textarea (Ctrl+Enter)
+    // Enter key in textarea (Ctrl+Enter or Cmd+Enter)
     queryInput.addEventListener('keydown', function(e) {
         if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+            e.preventDefault();
             performResearch();
         }
     });
@@ -63,16 +83,16 @@ function setupEventListeners() {
     clearBtn.addEventListener('click', clearAll);
     
     // Depth selector
-    depthOptions.forEach(option => {
-        option.addEventListener('click', () => {
-            depthOptions.forEach(opt => opt.classList.remove('active'));
-            option.classList.add('active');
-            currentDepth = option.dataset.depth;
+    depthBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            depthBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentDepth = btn.dataset.depth;
         });
     });
     
-    // Source toggles
-    sourceToggles.forEach(checkbox => {
+    // Source checkboxes
+    sourceCheckboxes.forEach(checkbox => {
         checkbox.addEventListener('change', updateResearchButton);
     });
     
@@ -87,38 +107,30 @@ function autoResizeTextarea() {
 function updateCharCounter() {
     const length = queryInput.value.length;
     charCounter.textContent = `${length}/500`;
-    charCounter.style.color = length > 450 ? '#ef4444' : '#94a3b8';
 }
 
 function updateResearchButton() {
-    const checkedSources = Array.from(sourceToggles).filter(cb => cb.checked);
+    const checkedSources = Array.from(sourceCheckboxes).filter(cb => cb.checked);
     researchBtn.disabled = checkedSources.length === 0;
-    researchBtn.style.opacity = researchBtn.disabled ? '0.5' : '1';
-    researchBtn.style.cursor = researchBtn.disabled ? 'not-allowed' : 'pointer';
 }
 
 async function checkAPIHealth() {
     try {
         const response = await fetch(`${API_BASE_URL}/health`);
-        const data = await response.json();
         
         if (response.ok) {
-            apiStatusBadge.innerHTML = `
-                <span class="status-dot"></span>
-                <span class="status-text">API Connected</span>
-            `;
-            apiStatusBadge.style.background = 'rgba(16, 185, 129, 0.1)';
-            apiStatusBadge.style.borderColor = 'rgba(16, 185, 129, 0.2)';
+            const statusDot = apiStatus.querySelector('.status-dot');
+            const statusText = apiStatus.querySelector('.status-text');
+            statusDot.style.background = '#10A37F';
+            statusText.textContent = 'Connected';
         } else {
             throw new Error('Health check failed');
         }
     } catch (error) {
-        apiStatusBadge.innerHTML = `
-            <span class="status-dot" style="background: #ef4444;"></span>
-            <span class="status-text">API Disconnected</span>
-        `;
-        apiStatusBadge.style.background = 'rgba(239, 68, 68, 0.1)';
-        apiStatusBadge.style.borderColor = 'rgba(239, 68, 68, 0.2)';
+        const statusDot = apiStatus.querySelector('.status-dot');
+        const statusText = apiStatus.querySelector('.status-text');
+        statusDot.style.background = '#ef4444';
+        statusText.textContent = 'Disconnected';
     }
 }
 
@@ -130,7 +142,7 @@ async function performResearch() {
         return;
     }
     
-    const selectedSources = Array.from(sourceToggles)
+    const selectedSources = Array.from(sourceCheckboxes)
         .filter(cb => cb.checked)
         .map(cb => cb.value);
     
@@ -395,13 +407,3 @@ function escapeHtml(text) {
     div.textContent = text;
     return div.innerHTML;
 }
-
-// Add CSS for metrics if not present
-const style = document.createElement('style');
-style.textContent = `
-    #resultsMetrics {
-        display: flex;
-        gap: 10px;
-    }
-`;
-document.head.appendChild(style);
